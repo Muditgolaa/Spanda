@@ -3,45 +3,48 @@
 import Link from "next/link";
 import { useRoomStore } from "@/store/roomStore";
 import WebSocketManager from "@/components/WebSocketManager";
+import SyncProgress from "@/components/SyncProgress";
 
 export default function RoomClient({
-  roomId,
-  username,
+    roomId,
+    username,
 }: {
-  roomId: string;
-  username: string;
+    roomId: string;
+    username: string;
 }) {
-  const clients = useRoomStore((s) => s.clients);
-  const myClientId = useRoomStore((s) => s.myClientId);
+    const clients = useRoomStore((s) => s.clients);
+    const myClientId = useRoomStore((s) => s.myClientId);
 
-  return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
-      {/* headless — mounts the socket */}
-      <WebSocketManager roomId={roomId} username={username} />
+    return (
+        <main className="min-h-screen p-8 max-w-2xl mx-auto">
+            {/* headless — mounts the socket */}
+            <WebSocketManager roomId={roomId} username={username} />
+            <div className="mb-6">
+                <SyncProgress />
+            </div>
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold">Room {roomId}</h1>
+                    <p className="text-sm text-muted-foreground">You are {username}</p>
+                </div>
+                <Link href="/" className="text-sm underline">
+                    Leave
+                </Link>
+            </div>
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Room {roomId}</h1>
-          <p className="text-sm text-muted-foreground">You are {username}</p>
-        </div>
-        <Link href="/" className="text-sm underline">
-          Leave
-        </Link>
-      </div>
-
-      <h2 className="text-lg font-semibold mb-2">
-        In this room ({clients.length})
-      </h2>
-      <ul className="space-y-2">
-        {clients.map((c) => (
-          <li key={c.clientId} className="rounded-md border p-3">
-            {c.username}
-            {c.clientId === myClientId && (
-              <span className="text-xs text-muted-foreground"> (you)</span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </main>
-  );
+            <h2 className="text-lg font-semibold mb-2">
+                In this room ({clients.length})
+            </h2>
+            <ul className="space-y-2">
+                {clients.map((c) => (
+                    <li key={c.clientId} className="rounded-md border p-3">
+                        {c.username}
+                        {c.clientId === myClientId && (
+                            <span className="text-xs text-muted-foreground"> (you)</span>
+                        )}
+                    </li>
+                ))}
+            </ul>
+        </main>
+    );
 }
