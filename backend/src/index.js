@@ -1,0 +1,65 @@
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import cors from "cors";
+import { nanoid } from "nanoid";
+import "dotenv/config";
+
+import { addClient, removeClient, getClients } from "./roomManager.js";
+
+const PORT = process.env.PORT || 8080;
+
+const app = express();
+app.use(cors());
+
+// Health check — later used by a cron to keep the free Render server awake.
+app.get("/health", (_req, res) => res.json({ ok: true }));
+
+// Socket.IO needs a raw HTTP server to attach to.
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: { origin: "*" }, // dev only — we lock this to our Vercel URL before deploy
+});
+
+io.on("connection", (socket) => {
+  // The frontend sends these in the connection handshake (see Step 2).
+  const { roomId, username } = socket.handshake.query;
+
+  // Refuse malformed connections.
+  if (!roomId || !username) {
+    socket.disconnect(true);
+    return;
+  }
+
+  // Mint a unique identity for this connection.
+  const clientId = nanoid();
+  socket.data.clientId = clientId;
+  socket.data.roomId = roomId;
+
+  // Put this socket into the room and record it in memory.
+  socket.join(roomId);
+  addClient(roomId, { clientId, username, socketId: socket.id });
+  console.log(`[+] ${username} (${clientId}) joined room ${roomId}`);
+
+  // 1) Unicast: tell THIS client its own id.
+  socket.emit("message", { type: "CONNECTED", clientId });
+
+  // 2) Broadcast: tell EVERYONE in the room the new user list.
+  io.to(roomId).emit("message", {
+    type: "CLIENT_CHANGE",
+    clients: getClients(roomId),
+  });
+
+  socket.on("disconnect", () => {
+    removeClient(roomId, clientId);
+    console.log(`[-] ${username} (${clientId}) left room ${roomId}`);
+    io.to(roomId).emit("message", {
+      type: "CLIENT_CHANGE",
+      clients: getClients(roomId),
+    });
+  });
+});
+
+httpServer.listen(PORT, () => {
+  console.log(`Spanda backend listening on http://localhost:${PORT}`);
+});
