@@ -1,10 +1,5 @@
 import { create } from "zustand";
-
-export type Client = {
-  clientId: string;
-  username: string;
-  socketId?: string;
-};
+import type { Client } from "@/lib/schemas"; // ← single source of truth
 
 type RoomState = {
   roomId: string | null;
