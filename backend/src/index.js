@@ -23,15 +23,20 @@ import {
 
 const PORT = process.env.PORT || 8080;
 
+// In prod, set CLIENT_ORIGIN to your Vercel URL(s), comma-separated.
+// Locally it's undefined → allow all, so dev keeps working.
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN;
+const corsOrigin = CLIENT_ORIGIN ? CLIENT_ORIGIN.split(",") : "*";
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: corsOrigin }));
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // Socket.IO needs a raw HTTP server to attach to.
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: "*" }, // dev only — we lock this to our Vercel URL before deploy
+  cors: { origin: corsOrigin }, // dev only — we lock this to our Vercel URL before deploy
 });
 
 io.on("connection", (socket) => {
