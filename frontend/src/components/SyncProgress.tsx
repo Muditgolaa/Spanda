@@ -12,7 +12,7 @@ export default function SyncProgress() {
 
   if (isSynced) {
     return (
-      <div className="rounded-md border p-4 text-sm">
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-sm">
         <span className="font-medium text-green-600">● Synced</span>
         <span className="ml-3 text-muted-foreground">
           offset {offset.toFixed(1)}ms · RTT {rtt.toFixed(1)}ms

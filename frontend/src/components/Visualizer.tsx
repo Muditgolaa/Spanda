@@ -70,11 +70,11 @@ export default function Visualizer() {
 
   if (!isStarted) return null;
 
-  return (
-    <div className="relative flex justify-center rounded-md border bg-neutral-950 p-4">
+    return (
+    <div className="relative flex justify-center rounded-2xl border border-white/10 bg-neutral-950 p-6 shadow-2xl shadow-fuchsia-500/10">
       <canvas ref={canvasRef} style={{ width: 320, height: 320 }} />
       {!isPlaying && (
-        <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-neutral-400">
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-neutral-500">
           Press Play to see the visualizer
         </span>
       )}
