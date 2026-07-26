@@ -35,7 +35,7 @@ export default function UserGrid() {
   }
 
   return (
-    <div className="rounded-md border p-4">
+    <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
       <div
         ref={boxRef}
         onPointerDown={onPointerDown}

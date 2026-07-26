@@ -13,42 +13,66 @@ import UserGrid from "@/components/UserGrid";
 import SpatialControls from "@/components/SpatialControls";
 
 export default function RoomClient({
-  roomId,
-  username,
+    roomId,
+    username,
 }: {
-  roomId: string;
-  username: string;
+    roomId: string;
+    username: string;
 }) {
-  return (
-    <main className="mx-auto min-h-screen max-w-2xl space-y-6 p-8">
-      {/* headless — mounts the socket */}
-      <WebSocketManager roomId={roomId} username={username} />
+    return (
+        <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-neutral-100">
+            <WebSocketManager roomId={roomId} username={username} />
 
-      {/* header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Room {roomId}</h1>
-          <p className="text-sm text-muted-foreground">You are {username}</p>
+            <header className="sticky top-0 z-10 border-b border-white/10 bg-black/40 backdrop-blur">
+                <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+
+                    <div className="flex items-center gap-2">
+                        <img src="/spanda-mark.svg" alt="" className="h-7 w-7" />
+                        <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+                            Spanda
+                        </span>
+                        <span className="rounded-full border border-neutral-800 bg-neutral-900 px-2 py-0.5 font-mono text-sm">
+                            {roomId}
+                        </span>
+                    </div>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-sm">
+                        {roomId}
+                    </span>
+
+                    <div className="flex items-center gap-4">
+                        <span className="hidden text-xs text-neutral-400 sm:inline">
+                            {username}
+                        </span>
+                        <Link
+                            href="/"
+                            className="text-sm text-neutral-300 underline-offset-4 hover:underline"
+                        >
+                            Leave
+                        </Link>
+                    </div>
+                </div>
+            </header>
+
+            <main className="mx-auto max-w-5xl space-y-5 px-4 py-6">
+                <SyncProgress />
+                <StartSystem />
+                <StatusBar />
+
+                {/* hero */}
+                <Visualizer />
+
+                {/* controls + queue side by side on desktop */}
+                <div className="grid gap-5 md:grid-cols-2">
+                    <div className="space-y-5">
+                        <AudioControls />
+                        <SpatialControls />
+                        <Uploader />
+                    </div>
+                    <Queue />
+                </div>
+
+                <UserGrid />
+            </main>
         </div>
-        <Link href="/" className="text-sm underline">
-          Leave
-        </Link>
-      </div>
-
-      {/* sync + audio */}
-      <SyncProgress />
-      <div className="space-y-4">
-        <StartSystem />
-        <StatusBar />
-        <Visualizer />
-        <AudioControls />
-        <Uploader />
-        <Queue />
-        <SpatialControls />
-      </div>
-
-      {/* who's in the room */}
-      <UserGrid />
-    </main>
-  );
+    );
 }

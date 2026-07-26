@@ -25,7 +25,7 @@ export default function Queue() {
   }
 
   return (
-    <div className="space-y-3 rounded-md border p-4">
+    <div className="space-y-3 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Queue ({queue.length})</h3>
         <div className="flex gap-2">

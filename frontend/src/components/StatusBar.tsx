@@ -23,7 +23,7 @@ export default function StatusBar() {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-md border p-3 text-sm">
+    <div className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-sm">
       <div className="flex gap-4 text-muted-foreground">
         <span>
           {isSynced ? "●" : "○"} offset {offset.toFixed(1)}ms
