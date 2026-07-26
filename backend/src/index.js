@@ -13,6 +13,13 @@ import {
   addTrack,
   getTracks,
 } from "./roomManager.js";
+import {
+  startCircle,
+  startSpiral,
+  stopSpatial,
+  setManualSource,
+  cleanupRoom,
+} from "./spatial.js";
 
 const PORT = process.env.PORT || 8080;
 
@@ -52,6 +59,22 @@ io.on("connection", (socket) => {
 
   // Answer NTP time requests. We stamp t1 (receive) and t2 (send) and echo t0.
   socket.on("message", (msg) => {
+    if (msg?.type === "START_SPATIAL_AUDIO") {
+      startCircle(io, roomId);
+      return;
+    }
+    if (msg?.type === "START_SPIRAL_SPATIAL_AUDIO") {
+      startSpiral(io, roomId);
+      return;
+    }
+    if (msg?.type === "STOP_SPATIAL_AUDIO") {
+      stopSpatial(io, roomId);
+      return;
+    }
+    if (msg?.type === "SET_LISTENING_SOURCE") {
+      setManualSource(io, roomId, msg.x, msg.y);
+      return;
+    }
     if (msg?.type === "UPLOAD_COMPLETE") {
       addTrack(roomId, { audioId: msg.audioId, name: msg.name });
       io.to(roomId).emit("message", {
@@ -105,10 +128,14 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     removeClient(roomId, clientId);
     console.log(`[-] ${username} (${clientId}) left room ${roomId}`);
-    io.to(roomId).emit("message", {
-      type: "CLIENT_CHANGE",
-      clients: getClients(roomId),
-    });
+    if (getClients(roomId).length === 0) {
+      cleanupRoom(roomId); // no listeners left → stop the timer
+    } else {
+      io.to(roomId).emit("message", {
+        type: "CLIENT_CHANGE",
+        clients: getClients(roomId),
+      });
+    }
   });
 });
 

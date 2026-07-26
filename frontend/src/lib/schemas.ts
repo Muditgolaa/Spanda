@@ -71,13 +71,42 @@ export const NewAudioSourceSchema = z.object({
     name: z.string(),
 });
 
+// Client → server
+export const StartSpatialSchema = z.object({
+  type: z.literal("START_SPATIAL_AUDIO"),
+});
+export const StartSpiralSchema = z.object({
+  type: z.literal("START_SPIRAL_SPATIAL_AUDIO"),
+});
+export const StopSpatialSchema = z.object({
+  type: z.literal("STOP_SPATIAL_AUDIO"),
+});
+export const SetListeningSourceSchema = z.object({
+  type: z.literal("SET_LISTENING_SOURCE"),
+  x: z.number(),
+  y: z.number(),
+});
+
+// Server → room: per-client gain map
+export const SpatialGainsSchema = z.object({
+  type: z.literal("SPATIAL_GAINS"),
+  gains: z.record(
+    z.string(),
+    z.object({ gain: z.number(), rampTime: z.number() }),
+  ),
+});
+
 // Everything the CLIENT can SENT & RECEIVE.
 export const WSRequest = z.discriminatedUnion("type", [
   NtpRequestSchema,
   PlaySchema,
   PauseSchema,
   ReorderSchema,
-  UploadCompleteSchema, 
+  UploadCompleteSchema,
+  StartSpatialSchema,
+  StartSpiralSchema,
+  StopSpatialSchema,
+  SetListeningSourceSchema,
 ]);
 
 export const WSResponse = z.discriminatedUnion("type", [
@@ -85,7 +114,8 @@ export const WSResponse = z.discriminatedUnion("type", [
   ClientChangeSchema,
   NtpResponseSchema,
   ScheduledActionSchema,
-  NewAudioSourceSchema, 
+  NewAudioSourceSchema,
+  SpatialGainsSchema, 
 ]);
 
 export type WSRequest = z.infer<typeof WSRequest>;

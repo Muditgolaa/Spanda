@@ -10,6 +10,7 @@ import AudioControls from "@/components/AudioControls";
 import Uploader from "@/components/Uploader";
 import Queue from "@/components/Queue";
 import UserGrid from "@/components/UserGrid";
+import SpatialControls from "@/components/SpatialControls";
 
 export default function RoomClient({
   roomId,
@@ -43,6 +44,7 @@ export default function RoomClient({
         <AudioControls />
         <Uploader />
         <Queue />
+        <SpatialControls />
       </div>
 
       {/* who's in the room */}
