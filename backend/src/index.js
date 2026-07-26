@@ -5,8 +5,12 @@ import cors from "cors";
 import { nanoid } from "nanoid";
 import "dotenv/config";
 import { epochNow } from "./epochNow.js";
-
-import { addClient, removeClient, getClients } from "./roomManager.js";
+import {
+  addClient,
+  removeClient,
+  getClients,
+  reorderClient,
+} from "./roomManager.js";
 
 const PORT = process.env.PORT || 8080;
 
@@ -54,6 +58,14 @@ io.on("connection", (socket) => {
         t1, // server receive time
         t2: epochNow(), // server send time
       });
+    }
+    if (msg?.type === "REORDER") {
+      reorderClient(roomId, msg.clientId);
+      io.to(roomId).emit("message", {
+        type: "CLIENT_CHANGE",
+        clients: getClients(roomId),
+      });
+      return;
     }
     // Play/Pause: stamp a future execute-time and fan out to the whole room.
     if (msg?.type === "PLAY" || msg?.type === "PAUSE") {

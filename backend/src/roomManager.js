@@ -1,28 +1,56 @@
-// The entire "database" of the app: an in-memory Map of rooms.
-// It vanishes when the server restarts 
+// In-memory rooms. Now also maintains an ordered seating list and positions each client on a circle in a 100x100 virtual grid.
 
-const rooms = new Map(); // roomId -> { clients: Map<clientId, client> }
+const rooms = new Map(); // roomId -> { clients: Map<clientId, client>, order: string[] }
 
-// Add a client to a room, creating the room on first join.
-export function addClient(roomId, client) {
-  if (!rooms.has(roomId)) {
-    rooms.set(roomId, { clients: new Map() });
-  }
-  rooms.get(roomId).clients.set(client.clientId, client);
+const GRID = 100;
+const CENTER = GRID / 2; // 50,50
+const RADIUS = 25;
+
+// Lay the clients out evenly on a circle, in `order`.
+function positionClients(room) {
+  const n = Math.max(1, room.order.length);
+  room.order.forEach((clientId, i) => {
+    const client = room.clients.get(clientId);
+    if (!client) return;
+    const angle = (2 * Math.PI * i) / n - Math.PI / 2; // first seat at the top
+    client.x = CENTER + RADIUS * Math.cos(angle);
+    client.y = CENTER + RADIUS * Math.sin(angle);
+  });
 }
 
-// Remove a client; if that empties the room, delete the room entirely (cleanup).
+export function addClient(roomId, client) {
+  if (!rooms.has(roomId)) {
+    rooms.set(roomId, { clients: new Map(), order: [] });
+  }
+  const room = rooms.get(roomId);
+  room.clients.set(client.clientId, client);
+  room.order.push(client.clientId);
+  positionClients(room);
+}
+
 export function removeClient(roomId, clientId) {
   const room = rooms.get(roomId);
   if (!room) return;
   room.clients.delete(clientId);
+  room.order = room.order.filter((id) => id !== clientId);
   if (room.clients.size === 0) {
-    rooms.delete(roomId);
+    rooms.delete(roomId); // cleanup empty room
+  } else {
+    positionClients(room); // re-circle the survivors
   }
 }
 
-// The current list of clients in a room, as a plain array (safe to send over the wire).
+// Move a client to the front of the seating order, then re-circle.
+export function reorderClient(roomId, clientId) {
+  const room = rooms.get(roomId);
+  if (!room || !room.clients.has(clientId)) return;
+  room.order = [clientId, ...room.order.filter((id) => id !== clientId)];
+  positionClients(room);
+}
+
+// Clients in seating order, each carrying its x,y.
 export function getClients(roomId) {
   const room = rooms.get(roomId);
-  return room ? Array.from(room.clients.values()) : [];
+  if (!room) return [];
+  return room.order.map((id) => room.clients.get(id));
 }

@@ -1,36 +1,22 @@
-// The single source of truth for every message on the wire. One Socket.IO event ("message") carries all of them; the `type` field is the discriminator. The client validates every inbound frame against these schemas.
+// The single source of truth for every message on the wire. One Socket.IO event ("message") carries all of them; `type` is the discriminator.
 import { z } from "zod";
 
-// A client in a room.
+// A client in a room (with circle position).
 export const ClientSchema = z.object({
   clientId: z.string(),
   username: z.string(),
   socketId: z.string().optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
 });
 export type Client = z.infer<typeof ClientSchema>;
 
-// Server → ONE socket (unicast) 
+// ── Server → ONE socket (unicast) ────────────────────────────────
 export const ConnectedSchema = z.object({
   type: z.literal("CONNECTED"),
   clientId: z.string(),
 });
 
-// Server → whole room (broadcast) 
-export const ClientChangeSchema = z.object({
-  type: z.literal("CLIENT_CHANGE"),
-  clients: z.array(ClientSchema),
-});
-
-// Client → server (requests) 
-export const NtpRequestSchema = z.object({
-  type: z.literal("NTP_REQUEST"),
-  t0: z.number(),
-});
-
-export const WSRequest = z.discriminatedUnion("type", [NtpRequestSchema]);
-export type WSRequest = z.infer<typeof WSRequest>;
-
-// Server → one socket: NTP reply (add to unicast + WSResponse)
 export const NtpResponseSchema = z.object({
   type: z.literal("NTP_RESPONSE"),
   t0: z.number(),
@@ -38,32 +24,51 @@ export const NtpResponseSchema = z.object({
   t2: z.number(),
 });
 
+// ── Server → whole room (broadcast) ──────────────────────────────
+export const ClientChangeSchema = z.object({
+  type: z.literal("CLIENT_CHANGE"),
+  clients: z.array(ClientSchema),
+});
 
-// Client → server
+// ── Client → server (requests) ───────────────────────────────────
+export const NtpRequestSchema = z.object({
+  type: z.literal("NTP_REQUEST"),
+  t0: z.number(),
+});
 export const PlaySchema = z.object({
-    type: z.literal("PLAY"),
-    audioId: z.string(),
-    trackTimeSeconds: z.number(),
+  type: z.literal("PLAY"),
+  audioId: z.string(),
+  trackTimeSeconds: z.number(),
 });
 export const PauseSchema = z.object({
-    type: z.literal("PAUSE"),
+  type: z.literal("PAUSE"),
+});
+export const ReorderSchema = z.object({
+  type: z.literal("REORDER"),
+  clientId: z.string(),
 });
 
-// Server → room: the scheduled action wrapper
+// Everything the CLIENT can SEND.
+export const WSRequest = z.discriminatedUnion("type", [
+  NtpRequestSchema,
+  PlaySchema,
+  PauseSchema,
+  ReorderSchema,
+]);
+export type WSRequest = z.infer<typeof WSRequest>;
+
+// ── Server → room: scheduled action wrapper ──────────────────────
 export const ScheduledActionSchema = z.object({
   type: z.literal("SCHEDULED_ACTION"),
   action: z.discriminatedUnion("type", [PlaySchema, PauseSchema]),
   serverTimeToExecute: z.number(),
 });
 
-// Everything the CLIENT can RECEIVE, unioned by the `type` discriminator. We add NTP_RESPONSE, SCHEDULED_ACTION, etc. to this list in later steps.
+// Everything the CLIENT can RECEIVE.
 export const WSResponse = z.discriminatedUnion("type", [
   ConnectedSchema,
   ClientChangeSchema,
   NtpResponseSchema,
-  NtpRequestSchema,
-  PlaySchema,
-  PauseSchema,
   ScheduledActionSchema,
 ]);
 export type WSResponse = z.infer<typeof WSResponse>;
