@@ -26,6 +26,7 @@ export const NtpRequestSchema = z.object({
   type: z.literal("NTP_REQUEST"),
   t0: z.number(),
 });
+
 export const WSRequest = z.discriminatedUnion("type", [NtpRequestSchema]);
 export type WSRequest = z.infer<typeof WSRequest>;
 
@@ -37,10 +38,32 @@ export const NtpResponseSchema = z.object({
   t2: z.number(),
 });
 
+
+// Client → server
+export const PlaySchema = z.object({
+    type: z.literal("PLAY"),
+    audioId: z.string(),
+    trackTimeSeconds: z.number(),
+});
+export const PauseSchema = z.object({
+    type: z.literal("PAUSE"),
+});
+
+// Server → room: the scheduled action wrapper
+export const ScheduledActionSchema = z.object({
+  type: z.literal("SCHEDULED_ACTION"),
+  action: z.discriminatedUnion("type", [PlaySchema, PauseSchema]),
+  serverTimeToExecute: z.number(),
+});
+
 // Everything the CLIENT can RECEIVE, unioned by the `type` discriminator. We add NTP_RESPONSE, SCHEDULED_ACTION, etc. to this list in later steps.
 export const WSResponse = z.discriminatedUnion("type", [
   ConnectedSchema,
   ClientChangeSchema,
   NtpResponseSchema,
+  NtpRequestSchema,
+  PlaySchema,
+  PauseSchema,
+  ScheduledActionSchema,
 ]);
 export type WSResponse = z.infer<typeof WSResponse>;

@@ -50,9 +50,17 @@ io.on("connection", (socket) => {
       const t1 = epochNow(); // moment the server received the request
       socket.emit("message", {
         type: "NTP_RESPONSE",
-        t0: msg.t0, // client's send time 
+        t0: msg.t0, // client's send time
         t1, // server receive time
-        t2: epochNow(), // server send time 
+        t2: epochNow(), // server send time
+      });
+    }
+    // Play/Pause: stamp a future execute-time and fan out to the whole room.
+    if (msg?.type === "PLAY" || msg?.type === "PAUSE") {
+      io.to(roomId).emit("message", {
+        type: "SCHEDULED_ACTION",
+        action: msg, // the original PLAY/PAUSE, untouched
+        serverTimeToExecute: epochNow() + 750, // 750ms lead time
       });
     }
   });

@@ -8,6 +8,8 @@ import { WSResponse } from "@/lib/schemas";
 import { epochNow } from "@/lib/epochNow";
 import { computeSample, estimateOffset, estimateRtt } from "@/lib/ntp";
 import type { NtpSample } from "@/lib/ntp";
+import { setSocket, emitMessage } from "@/lib/socketBus";
+import { scheduledPlay, scheduledPause } from "@/lib/playback";
 
 export default function WebSocketManager({
   roomId,
@@ -17,7 +19,7 @@ export default function WebSocketManager({
   username: string;
 }) {
   const socketRef = useRef<Socket | null>(null);
-  const samplesRef = useRef<NtpSample[]>([]); // collected across the 40-sample loop
+  const samplesRef = useRef<NtpSample[]>([]);
 
   const setRoom = useRoomStore((s) => s.setRoom);
   const setMyClientId = useRoomStore((s) => s.setMyClientId);
@@ -36,13 +38,12 @@ export default function WebSocketManager({
       query: { roomId, username },
     });
     socketRef.current = socket;
+    setSocket(socket); // make it available to AudioControls / StatusBar
 
-    // Fire ONE ntp request, stamping our send time t0.
     const sendNtp = () => {
-      socket.emit("message", { type: "NTP_REQUEST", t0: epochNow() });
+      emitMessage({ type: "NTP_REQUEST", t0: epochNow() });
     };
 
-    // Start the loop as soon as we're connected.
     socket.on("connect", () => sendNtp());
 
     socket.on("message", (raw: unknown) => {
@@ -63,14 +64,12 @@ export default function WebSocketManager({
           break;
 
         case "NTP_RESPONSE": {
-          const t3 = epochNow(); // client receive time
+          const t3 = epochNow();
           samplesRef.current.push(computeSample(msg.t0, msg.t1, msg.t2, t3));
-
           const n = samplesRef.current.length;
           setProgress(n);
-
           if (n < TOTAL_MEASUREMENTS) {
-            setTimeout(sendNtp, 30); // self-perpetuating: 40 samples, 30ms apart
+            setTimeout(sendNtp, 30);
           } else {
             const offset = estimateOffset(samplesRef.current);
             const rtt = estimateRtt(samplesRef.current);
@@ -81,10 +80,25 @@ export default function WebSocketManager({
           }
           break;
         }
+
+        case "SCHEDULED_ACTION": {
+          const { action, serverTimeToExecute } = msg;
+          if (action.type === "PLAY") {
+            scheduledPlay(
+              action.audioId,
+              action.trackTimeSeconds,
+              serverTimeToExecute,
+            );
+          } else {
+            scheduledPause(serverTimeToExecute);
+          }
+          break;
+        }
       }
     });
 
     return () => {
+      setSocket(null);
       socket.disconnect();
     };
   }, [

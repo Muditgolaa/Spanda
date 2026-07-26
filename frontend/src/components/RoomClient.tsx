@@ -6,6 +6,7 @@ import WebSocketManager from "@/components/WebSocketManager";
 import SyncProgress from "@/components/SyncProgress";
 import StartSystem from "@/components/StartSystem";
 import AudioControls from "@/components/AudioControls";
+import StatusBar from "@/components/StatusBar";
 
 export default function RoomClient({
     roomId,
@@ -25,6 +26,7 @@ export default function RoomClient({
                 <SyncProgress />
                 <div className="mb-6 space-y-4">
                     <StartSystem />
+                    <StatusBar />
                     <AudioControls />
                 </div>
             </div>
