@@ -7,6 +7,7 @@ import SyncProgress from "@/components/SyncProgress";
 import StartSystem from "@/components/StartSystem";
 import AudioControls from "@/components/AudioControls";
 import StatusBar from "@/components/StatusBar";
+import UserGrid from "@/components/UserGrid";
 
 export default function RoomClient({
     roomId,
@@ -43,6 +44,7 @@ export default function RoomClient({
             <h2 className="text-lg font-semibold mb-2">
                 In this room ({clients.length})
             </h2>
+            <UserGrid />
             <ul className="space-y-2">
                 {clients.map((c) => (
                     <li key={c.clientId} className="rounded-md border p-3">
