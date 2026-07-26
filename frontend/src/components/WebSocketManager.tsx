@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useRoomStore } from "@/store/roomStore";
+import { WSResponse } from "@/lib/schemas";
 
 // Renders nothing. Its whole job is to own the socket connection and funnel inbound messages into the Zustand store.
 export default function WebSocketManager({
@@ -27,15 +28,21 @@ export default function WebSocketManager({
     socketRef.current = socket;
 
     // ONE event, switch on msg.type — our tiny typed protocol.
-    socket.on("message", (msg: { type: string; [key: string]: unknown }) => {
+    socket.on("message", (raw: unknown) => {
+      const result = WSResponse.safeParse(raw);
+      if (!result.success) {
+        // Refuse that doesn't match the contract loudly, but no crash.
+        console.error("Rejected malformed message:", result.error.issues, raw);
+        return;
+      }
+
+      const msg = result.data; // fully typed by the discriminated union — no casts
       switch (msg.type) {
         case "CONNECTED":
-          setMyClientId(msg.clientId as string);
+          setMyClientId(msg.clientId);
           break;
         case "CLIENT_CHANGE":
-          setClients(msg.clients as never);
-          break;
-        default:
+          setClients(msg.clients);
           break;
       }
     });
