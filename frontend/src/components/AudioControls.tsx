@@ -1,52 +1,51 @@
 "use client";
 
-import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAudioStore } from "@/store/audioStore";
+import { emitMessage } from "@/lib/socketBus";
 
 export default function AudioControls() {
-  const ctx = useAudioStore((s) => s.ctx);
-  const masterGain = useAudioStore((s) => s.masterGain);
   const tracks = useAudioStore((s) => s.tracks);
   const currentTrackId = useAudioStore((s) => s.currentTrackId);
   const isStarted = useAudioStore((s) => s.isStarted);
   const isPlaying = useAudioStore((s) => s.isPlaying);
-  const setPlaying = useAudioStore((s) => s.setPlaying);
-  const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const setCurrentTrack = useAudioStore((s) => s.setCurrentTrack);
 
   if (!isStarted) return null;
 
-  const current = tracks.find((t) => t.id === currentTrackId);
-
-  function playLocal() {
-    if (!ctx || !masterGain || !current) return;
-    // Source nodes are ONE-SHOT: you must create a fresh one every play.
-    const source = ctx.createBufferSource();
-    source.buffer = current.buffer;
-    source.connect(masterGain);
-    source.onended = () => setPlaying(false);
-    source.start(); // immediate — local test only; Step 6 schedules this
-    sourceRef.current = source;
-    setPlaying(true);
+  // These only EMIT. The actual scheduling happens when SCHEDULED_ACTION comesback to every device (including this one), so all devices schedule alike.
+  function play() {
+    if (!currentTrackId) return;
+    emitMessage({ type: "PLAY", audioId: currentTrackId, trackTimeSeconds: 0 });
   }
-
-  function stopLocal() {
-    sourceRef.current?.stop();
-    sourceRef.current = null;
-    setPlaying(false);
+  function pause() {
+    emitMessage({ type: "PAUSE" });
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <Button onClick={playLocal} disabled={isPlaying || !current}>
-        Play (local test)
-      </Button>
-      <Button variant="outline" onClick={stopLocal} disabled={!isPlaying}>
-        Stop
-      </Button>
-      <span className="text-sm text-muted-foreground">
-        {current ? current.name : "No track"}
-      </span>
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Button onClick={play} disabled={!currentTrackId}>
+          {isPlaying ? "Restart (synced)" : "Play (synced)"}
+        </Button>
+        <Button variant="outline" onClick={pause} disabled={!isPlaying}>
+          Pause
+        </Button>
+      </div>
+
+      {/* pick which track everyone will play */}
+      <div className="flex flex-wrap gap-2">
+        {tracks.map((t) => (
+          <Button
+            key={t.id}
+            size="sm"
+            variant={t.id === currentTrackId ? "default" : "secondary"}
+            onClick={() => setCurrentTrack(t.id)}
+          >
+            {t.name}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }
