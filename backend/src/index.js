@@ -10,6 +10,8 @@ import {
   removeClient,
   getClients,
   reorderClient,
+  addTrack,
+  getTracks,
 } from "./roomManager.js";
 
 const PORT = process.env.PORT || 8080;
@@ -50,6 +52,15 @@ io.on("connection", (socket) => {
 
   // Answer NTP time requests. We stamp t1 (receive) and t2 (send) and echo t0.
   socket.on("message", (msg) => {
+    if (msg?.type === "UPLOAD_COMPLETE") {
+      addTrack(roomId, { audioId: msg.audioId, name: msg.name });
+      io.to(roomId).emit("message", {
+        type: "NEW_AUDIO_SOURCE",
+        audioId: msg.audioId,
+        name: msg.name,
+      });
+      return;
+    }
     if (msg?.type === "NTP_REQUEST") {
       const t1 = epochNow(); // moment the server received the request
       socket.emit("message", {

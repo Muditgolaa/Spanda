@@ -6,8 +6,9 @@ type AudioState = {
   masterGain: GainNode | null;
   analyser: AnalyserNode | null;
   tracks: Track[];
+  sources: { audioId: string; name: string }[]; // ← NEW: lightweight catalog
   currentTrackId: string | null;
-  isStarted: boolean; // audio unlocked via the gesture
+  isStarted: boolean;
   isPlaying: boolean;
   setGraph: (
     ctx: AudioContext,
@@ -15,6 +16,7 @@ type AudioState = {
     analyser: AnalyserNode,
   ) => void;
   addTrack: (t: Track) => void;
+  addSource: (s: { audioId: string; name: string }) => void; // ← NEW
   setCurrentTrack: (id: string) => void;
   setStarted: (v: boolean) => void;
   setPlaying: (v: boolean) => void;
@@ -25,6 +27,7 @@ export const useAudioStore = create<AudioState>((set) => ({
   masterGain: null,
   analyser: null,
   tracks: [],
+  sources: [], // ← NEW
   currentTrackId: null,
   isStarted: false,
   isPlaying: false,
@@ -33,6 +36,12 @@ export const useAudioStore = create<AudioState>((set) => ({
     set((s) =>
       s.tracks.some((x) => x.id === t.id) ? s : { tracks: [...s.tracks, t] },
     ),
+  addSource: (s) =>
+    set((st) =>
+      st.sources.some((x) => x.audioId === s.audioId)
+        ? st
+        : { sources: [...st.sources, s] },
+    ), // ← NEW
   setCurrentTrack: (currentTrackId) => set({ currentTrackId }),
   setStarted: (isStarted) => set({ isStarted }),
   setPlaying: (isPlaying) => set({ isPlaying }),

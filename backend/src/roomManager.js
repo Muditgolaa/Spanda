@@ -20,7 +20,7 @@ function positionClients(room) {
 
 export function addClient(roomId, client) {
   if (!rooms.has(roomId)) {
-    rooms.set(roomId, { clients: new Map(), order: [] });
+    rooms.set(roomId, { clients: new Map(), order: [], tracks: [] });
   }
   const room = rooms.get(roomId);
   room.clients.set(client.clientId, client);
@@ -53,4 +53,18 @@ export function getClients(roomId) {
   const room = rooms.get(roomId);
   if (!room) return [];
   return room.order.map((id) => room.clients.get(id));
+}
+
+// A room's uploaded tracks (deduped by audioId).
+export function addTrack(roomId, track) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+  if (!room.tracks.some((t) => t.audioId === track.audioId)) {
+    room.tracks.push(track);
+  }
+}
+
+export function getTracks(roomId) {
+  const room = rooms.get(roomId);
+  return room ? room.tracks : [];
 }

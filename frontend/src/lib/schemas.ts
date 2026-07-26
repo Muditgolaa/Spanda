@@ -48,27 +48,45 @@ export const ReorderSchema = z.object({
   clientId: z.string(),
 });
 
-// Everything the CLIENT can SEND.
+
+// ── Server → room: scheduled action wrapper ──────────────────────
+export const ScheduledActionSchema = z.object({
+    type: z.literal("SCHEDULED_ACTION"),
+    action: z.discriminatedUnion("type", [PlaySchema, PauseSchema]),
+    serverTimeToExecute: z.number(),
+});
+
+
+// Client → server: I finished uploading a file to Cloudinary.
+export const UploadCompleteSchema = z.object({
+    type: z.literal("UPLOAD_COMPLETE"),
+    audioId: z.string(),
+    name: z.string(),
+});
+
+// Server → room: a new shared track exists at this URL.
+export const NewAudioSourceSchema = z.object({
+    type: z.literal("NEW_AUDIO_SOURCE"),
+    audioId: z.string(),
+    name: z.string(),
+});
+
+// Everything the CLIENT can SENT & RECEIVE.
 export const WSRequest = z.discriminatedUnion("type", [
   NtpRequestSchema,
   PlaySchema,
   PauseSchema,
   ReorderSchema,
+  UploadCompleteSchema, 
 ]);
-export type WSRequest = z.infer<typeof WSRequest>;
 
-// ── Server → room: scheduled action wrapper ──────────────────────
-export const ScheduledActionSchema = z.object({
-  type: z.literal("SCHEDULED_ACTION"),
-  action: z.discriminatedUnion("type", [PlaySchema, PauseSchema]),
-  serverTimeToExecute: z.number(),
-});
-
-// Everything the CLIENT can RECEIVE.
 export const WSResponse = z.discriminatedUnion("type", [
   ConnectedSchema,
   ClientChangeSchema,
   NtpResponseSchema,
   ScheduledActionSchema,
+  NewAudioSourceSchema, 
 ]);
+
+export type WSRequest = z.infer<typeof WSRequest>;
 export type WSResponse = z.infer<typeof WSResponse>;
