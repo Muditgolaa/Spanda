@@ -9,6 +9,7 @@ import AudioControls from "@/components/AudioControls";
 import StatusBar from "@/components/StatusBar";
 import UserGrid from "@/components/UserGrid";
 import Uploader from "@/components/Uploader";
+import Queue from "@/components/Queue"; 
 
 export default function RoomClient({
     roomId,
@@ -31,6 +32,7 @@ export default function RoomClient({
                     <StatusBar />
                     <AudioControls />
                     <Uploader />
+                    <Queue />
                 </div>
             </div>
             <div className="flex items-center justify-between mb-6">

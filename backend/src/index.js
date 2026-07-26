@@ -78,6 +78,14 @@ io.on("connection", (socket) => {
       });
       return;
     }
+    // REUPLOAD: give the newcomer any tracks the room already has.
+    for (const t of getTracks(roomId)) {
+      socket.emit("message", {
+        type: "NEW_AUDIO_SOURCE",
+        audioId: t.audioId,
+        name: t.name,
+      });
+    }
     // Play/Pause: stamp a future execute-time and fan out to the whole room.
     if (msg?.type === "PLAY" || msg?.type === "PAUSE") {
       io.to(roomId).emit("message", {
