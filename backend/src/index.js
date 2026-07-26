@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import cors from "cors";
 import { nanoid } from "nanoid";
 import "dotenv/config";
+import { epochNow } from "./epochNow.js";
 
 import { addClient, removeClient, getClients } from "./roomManager.js";
 
@@ -12,7 +13,6 @@ const PORT = process.env.PORT || 8080;
 const app = express();
 app.use(cors());
 
-// Health check — later used by a cron to keep the free Render server awake.
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
 // Socket.IO needs a raw HTTP server to attach to.
@@ -43,6 +43,19 @@ io.on("connection", (socket) => {
 
   // 1) Unicast: tell THIS client its own id.
   socket.emit("message", { type: "CONNECTED", clientId });
+
+  // Answer NTP time requests. We stamp t1 (receive) and t2 (send) and echo t0.
+  socket.on("message", (msg) => {
+    if (msg?.type === "NTP_REQUEST") {
+      const t1 = epochNow(); // moment the server received the request
+      socket.emit("message", {
+        type: "NTP_RESPONSE",
+        t0: msg.t0, // client's send time 
+        t1, // server receive time
+        t2: epochNow(), // server send time 
+      });
+    }
+  });
 
   // 2) Broadcast: tell EVERYONE in the room the new user list.
   io.to(roomId).emit("message", {
