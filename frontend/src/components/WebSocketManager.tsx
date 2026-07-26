@@ -12,6 +12,7 @@ import { setSocket, emitMessage } from "@/lib/socketBus";
 import { scheduledPlay, scheduledPause } from "@/lib/playback";
 import { useAudioStore } from "@/store/audioStore";
 import { loadTrack } from "@/lib/audio";
+import { applyGains } from "@/lib/spatial";
 
 export default function WebSocketManager({
     roomId,
@@ -57,6 +58,10 @@ export default function WebSocketManager({
 
             const msg = result.data;
             switch (msg.type) {
+                case "SPATIAL_GAINS":
+                    applyGains(msg.gains);
+                    break;
+                    
                 case "CONNECTED":
                     setMyClientId(msg.clientId);
                     break;
