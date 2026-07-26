@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRoomStore } from "@/store/roomStore";
 import WebSocketManager from "@/components/WebSocketManager";
 import SyncProgress from "@/components/SyncProgress";
+import StartSystem from "@/components/StartSystem";
+import AudioControls from "@/components/AudioControls";
 
 export default function RoomClient({
     roomId,
@@ -21,6 +23,10 @@ export default function RoomClient({
             <WebSocketManager roomId={roomId} username={username} />
             <div className="mb-6">
                 <SyncProgress />
+                <div className="mb-6 space-y-4">
+                    <StartSystem />
+                    <AudioControls />
+                </div>
             </div>
             <div className="flex items-center justify-between mb-6">
                 <div>
