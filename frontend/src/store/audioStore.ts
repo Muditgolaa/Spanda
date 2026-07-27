@@ -15,6 +15,7 @@ type AudioState = {
     masterGain: GainNode,
     analyser: AnalyserNode,
   ) => void;
+  reset: () => void;
   addTrack: (t: Track) => void;
   addSource: (s: { audioId: string; name: string }) => void; // ← NEW
   setCurrentTrack: (id: string) => void;
@@ -32,6 +33,17 @@ export const useAudioStore = create<AudioState>((set) => ({
   isStarted: false,
   isPlaying: false,
   setGraph: (ctx, masterGain, analyser) => set({ ctx, masterGain, analyser }),
+  reset: () =>
+    set({
+      ctx: null,
+      masterGain: null,
+      analyser: null,
+      tracks: [],
+      sources: [],
+      currentTrackId: null,
+      isStarted: false,
+      isPlaying: false,
+    }),
   addTrack: (t) =>
     set((s) =>
       s.tracks.some((x) => x.id === t.id) ? s : { tracks: [...s.tracks, t] },

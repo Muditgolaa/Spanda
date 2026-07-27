@@ -11,6 +11,13 @@ import Uploader from "@/components/Uploader";
 import Queue from "@/components/Queue";
 import UserGrid from "@/components/UserGrid";
 import SpatialControls from "@/components/SpatialControls";
+import { useEffect } from "react";
+import { useAudioStore } from "@/store/audioStore";
+import { useSyncStore } from "@/store/syncStore";
+import { useQueueStore } from "@/store/queueStore";
+import { useRoomStore } from "@/store/roomStore";
+import { stopAllPlayback } from "@/lib/playback";
+
 
 export default function RoomClient({
     roomId,
@@ -19,6 +26,18 @@ export default function RoomClient({
     roomId: string;
     username: string;
 }) {
+    useEffect(() => {
+        return () => {
+            // leaving the room → stop sound and reset all global state
+            stopAllPlayback();
+            const { ctx } = useAudioStore.getState();
+            if (ctx && ctx.state !== "closed") ctx.close().catch(() => { });
+            useAudioStore.getState().reset();
+            useSyncStore.getState().reset();
+            useQueueStore.getState().clear();
+            useRoomStore.getState().reset();
+        };
+    }, []);
     return (
         <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-neutral-100">
             <WebSocketManager roomId={roomId} username={username} />

@@ -43,7 +43,7 @@ export default function Join() {
             <div className="relative w-full max-w-sm">
                 <div className="mb-6 flex flex-col items-center text-center">
                     {/* animated pulse logo */}
-                    <img src="/spanda-hero.svg" alt="Spanda" className="h-28 w-28" />
+                    <img src="/spanda-hero.svg" alt="Spanda" className="h-28 w-28" fetchPriority="high" />
                     <h1 className="mt-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-4xl font-bold tracking-tight text-transparent">
                         Spanda
                     </h1>
