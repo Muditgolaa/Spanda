@@ -84,3 +84,8 @@ export function scheduledPause(serverTimeToExecute: number) {
   stopActive(ctx.currentTime + Math.max(0, waitSeconds));
   setPlaying(false);
 }
+
+export function stopAllPlayback() {
+  stopActive();
+  activeSource = null;
+}
