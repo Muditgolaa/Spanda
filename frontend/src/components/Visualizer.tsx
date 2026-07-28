@@ -71,8 +71,9 @@ export default function Visualizer() {
     if (!isStarted) return null;
 
     return (
-        <div className="relative flex justify-center rounded-2xl border border-white/10 bg-neutral-950 p-6 shadow-2xl shadow-fuchsia-500/10">
-            <canvas ref={canvasRef} style={{ width: 320, height: 320 }} />
+        <div className="relative flex justify-center overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-neutral-950 to-black p-8 shadow-[0_0_60px_-15px_rgba(217,70,239,0.45)]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_50%_at_50%_50%,rgba(168,85,247,0.15),transparent)]" />
+            <canvas ref={canvasRef} style={{ width: 320, height: 320 }} className="relative" />
             {!isPlaying && (
                 <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-neutral-500">
                     Press Play to see the visualizer
